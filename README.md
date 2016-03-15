@@ -11,8 +11,7 @@ All assignments are written using Scala.
   - JFoenix material design GUI
   - Scalascraper DSL used for web scraping
   
-## Assignment 2 
-Persistent BTree with Hashcache
+## Assignment 2 : Persistent BTree with Hashcache
 
 - Persistent BTree implementation stored on disk using a random access file
   - A de-serialization abstraction library to input and output persistent data onto the random access file.
