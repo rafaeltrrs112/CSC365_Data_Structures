@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="com.daodecode:scalax-collection_2.11:0.1.1" type="repository">
+    <properties maven-id="com.daodecode:scalax-collection_2.11:0.1.1" />
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/daodecode/scalax-collection_2.11/0.1.1/scalax-collection_2.11-0.1.1.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/scala-lang/scala-library/2.11.2/scala-library-2.11.2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
