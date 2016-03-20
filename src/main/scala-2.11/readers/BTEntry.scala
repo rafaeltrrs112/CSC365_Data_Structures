@@ -110,7 +110,6 @@ case class BTEntry(posit: Long, var nodes: ListBuffer[Long], reader: BTReader, v
 
 
     val right = bTNodes.drop(Math.floorDiv(SIZE, 2) + 1) // right most nodes
-    val left = bTNodes.dropRight(Math.floorDiv(SIZE, 2) + 1) // left most nodes
     val middle = bTNodes(SIZE / 2) // middle node
 
     val remRightMiddle = (right :+ middle).map(_.posit)
@@ -181,6 +180,9 @@ case class BTEntry(posit: Long, var nodes: ListBuffer[Long], reader: BTReader, v
     aRank.compareTo(bRank) < 0
   }
 
+  /**
+    * Updates this nodes state on disk.
+    */
   def update(): Unit = reader.newEntryAt(posit, nodes, children)
 
 }
