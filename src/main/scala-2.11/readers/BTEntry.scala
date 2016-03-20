@@ -108,15 +108,10 @@ case class BTEntry(posit: Long, var nodes: ListBuffer[Long], reader: BTReader, v
     sortNodes()
     val bTNodes = nodes.map(reader.extractNode)
 
-    println(s"All the nodes in the entry are $bTNodes")
 
     val right = bTNodes.drop(Math.floorDiv(SIZE, 2) + 1) // right most nodes
     val left = bTNodes.dropRight(Math.floorDiv(SIZE, 2) + 1) // left most nodes
     val middle = bTNodes(SIZE / 2) // middle node
-
-    println(s"The right nodes are $right")
-    println(s"The left nodes are $left")
-    println(s"The center node is $middle")
 
     val remRightMiddle = (right :+ middle).map(_.posit)
     this removeNodes remRightMiddle // Remove the right and middle element from the currentEntry
