@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/datastructures.iml" filepath="$PROJECT_DIR$/.idea/modules/datastructures.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/datastructures-build.iml" filepath="$PROJECT_DIR$/.idea/modules/datastructures-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/csc365_data_structures.iml" filepath="$PROJECT_DIR$/.idea/modules/csc365_data_structures.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/csc365_data_structures-build.iml" filepath="$PROJECT_DIR$/.idea/modules/csc365_data_structures-build.iml" />
     </modules>
   </component>
 </project>

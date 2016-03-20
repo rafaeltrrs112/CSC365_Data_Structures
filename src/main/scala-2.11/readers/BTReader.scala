@@ -4,20 +4,22 @@ import java.io.File
 
 import breeze.io.RandomAccessFile
 
+import scala.collection.mutable.ListBuffer
+
 /**
   * Random access file abstractions.
   *
-  * @param PATH
+  * @param filePath
   * The path to the RAF file.
   */
-case class BTreeRafReader(val PATH: String) {
+case class BTReader(filePath: String, ENTRY_SIZE: Int) {
   val CHAR_SIZE = 256
   val FIRST_OCCUR = 1
 
   val POSIT: String = "position"
   val READ_WRITE = "rw"
 
-  val file: File = new File(PATH)
+  val file: File = new File(filePath)
 
   val raf: RandomAccessFile = new RandomAccessFile(file, READ_WRITE)
 
@@ -32,13 +34,14 @@ case class BTreeRafReader(val PATH: String) {
     * Creates an empty readers.Entry at the position of the current file pointer.
     *
     * @param file
-    * The file to place the empty readers.Entry in.
+    * The file to place the empty  in.
     * @return
     * The position of the readers.Entry.
     */
-  def emptyEntry(implicit file: RandomAccessFile = raf): Long = {
+  def insertEmptyEntry(implicit file: RandomAccessFile = raf): Long = {
     val at = file.getFilePointer
-    for (i <- 0 to 4) file.writeLong(-1)
+    for (i <- 0 until ENTRY_SIZE) file.writeLong(-1)
+    for (i <- 0 to ENTRY_SIZE) file.writeLong(-1)
     at
   }
 
@@ -54,10 +57,11 @@ case class BTreeRafReader(val PATH: String) {
     * @return
     * The position of the readers.Entry.
     */
-  def newEntryAt(at: Long, neighbors: Array[Long])(implicit file: RandomAccessFile = raf): Long = {
+  def newEntryAt(at: Long, neighbors: ListBuffer[Long], children: ListBuffer[Long])(implicit file: RandomAccessFile = raf): Long = {
     val posit = file.getFilePointer
     file.seek(at)
-    neighbors.foreach(file.writeLong)
+    neighbors.padTo(ENTRY_SIZE - 1, -1L).foreach(file.writeLong)
+    children.padTo(ENTRY_SIZE, -1L).foreach(file.writeLong)
     file.seek(posit)
     at
   }
@@ -66,8 +70,6 @@ case class BTreeRafReader(val PATH: String) {
   /**
     * Creates node on the RAF file.
     *
-    * @param entry
-    *              The file pointer to the entry the created node resides in.
     * @param key
     *              The key for the created readers.Node.
     * @param left
@@ -77,10 +79,8 @@ case class BTreeRafReader(val PATH: String) {
     * @return
     * The position of the node.
     */
-  def newNode(entry: Long, key: String, left: Option[Long] = None, right: Option[Long] = None)(implicit file: RandomAccessFile = raf): Long = {
+  def newNode(key: String, left: Option[Long] = None, right: Option[Long] = None)(implicit file: RandomAccessFile = raf): Long = {
     val at = file.getFilePointer
-
-    file.writeLong(entry)
 
     val word = key.padTo(CHAR_SIZE, " ").mkString
     file.writeChars(word)
@@ -96,8 +96,6 @@ case class BTreeRafReader(val PATH: String) {
   /**
     * Creates node on the RAF file.
     *
-    * @param entry
-    *              The file pointer to the entry the created node resides in.
     * @param key
     *              The key for the created readers.Node.
     * @param left
@@ -107,18 +105,15 @@ case class BTreeRafReader(val PATH: String) {
     * @return
     * The position of the node.
     */
-  def newNodeAt(entry: Long, key: String, left: Option[Long], right: Option[Long], at: Long)(implicit file: RandomAccessFile = raf): Long = {
+  def newNodeAt(key: String, left: Option[Long], right: Option[Long], at: Long)(implicit file: RandomAccessFile = raf): Long = {
     val orig = file.getFilePointer
     file.seek(at)
-    file.writeLong(entry)
 
     val word = key.padTo(CHAR_SIZE, " ").mkString
     file.writeChars(word)
 
     file.writeInt(FIRST_OCCUR)
 
-    file.writeLong(if (left.isDefined) left.get else -1)
-    file.writeLong(if (right.isDefined) right.get else -1)
     file.seek(orig)
     at
   }
@@ -133,22 +128,13 @@ case class BTreeRafReader(val PATH: String) {
     * @return
     * An object representation of the readers.Node from the RAF file.
     */
-  def extractNode(at: Long)(implicit file: RandomAccessFile = raf): Node = {
+  def extractNode(at: Long)(implicit file: RandomAccessFile = raf): BTNode = {
     file.seek(at)
-    val entryPosit = file.readLong
     val wordChars = file.readChar(CHAR_SIZE)
     val word = wordChars.mkString.filterNot(_.isSpaceChar)
     val occurrence = file.readInt
 
-    val leftOpt = file.readLong
-    val rightOpt = file.readLong
-
-    val leftNeighbor = if (leftOpt == -1) None else Some(leftOpt)
-    val rightNeighbor = if (rightOpt == -1) None else Some(rightOpt)
-
-    val n = Node(at, entryPosit, word, occurrence, this)
-    n.init(leftNeighbor, rightNeighbor)
-    n
+    BTNode(at, word, occurrence, this)
   }
 
   /**
@@ -161,13 +147,18 @@ case class BTreeRafReader(val PATH: String) {
     * @return
     * An object representation of the readers.Entry from the RAF file
     */
-  def extractEntry(at: Long)(implicit file: RandomAccessFile = raf): Entry = {
+  def extractEntry(at: Long)(implicit file: RandomAccessFile = raf): BTEntry = {
     file.seek(at)
-    val neighbors = for (i <- 0 to 4) yield {
+    val neighbors = for (i <- 0 until ENTRY_SIZE) yield {
       file.readLong()
     }
-    val existing = neighbors
-    val e = Entry(at, existing.toArray, this)
+    val children = for(i <- 0 to ENTRY_SIZE) yield {
+      file.readLong()
+    }
+    val existing = neighbors.filterNot(_ == -1)
+    val born = children.filterNot(_ == -1)
+    val e = BTEntry(at, existing.to[ListBuffer], this, born.to[ListBuffer])
     e
   }
+
 }
