@@ -1,21 +1,28 @@
 package readers
 
-/**
-  * A node mapping.
-  *
-  * @param posit
-  * Position on disk.
 
-  * @param word
-  * The word key.
-  * @param occurrence
-  * The word occurrence value.
-  * @param reader
-  * The reader that extracted this node from disk. And has access to the origin RAF
-  * file of this node.
-  */
-case class BTNode(posit: Long, word: String, occurrence: Int, reader: BTReader) {
+class BTNode(var childCount: Int, implicit val reader: BTReader){
+  var children: Array[BTEntry] = new Array[BTEntry](reader.M)
 
-  override def toString: String = s"Node($posit, $word, $occurrence)"
+  /**
+    * Splits this node in two and returns the spawned node (contains R greatest values).
+    *
+    * @return
+    *          The R node spawned from a split.
+    */
+  def split : BTNode = {
+    val halfM = reader.M / 2
+    val rightNode = BTNode(halfM)
+    childCount = halfM
 
+    for(i <- 0 until halfM){
+      rightNode.children(i) = children(halfM + i)
+    }
+    rightNode
+  }
+
+}
+
+object BTNode {
+  def apply(childCount : Int)(implicit reader : BTReader) : BTNode = new BTNode(childCount, reader)
 }

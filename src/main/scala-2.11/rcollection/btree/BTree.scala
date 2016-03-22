@@ -1,20 +1,81 @@
 package rcollection.btree
 
-import rcollection.map.KVPair
 import readers.{BTEntry, BTNode, BTReader}
 
-class BTree[K, V](reader: BTReader, SIZE: Int)(var root: BTEntry) {
+class BTree(reader: BTReader) {
+  implicit val impReader = reader
+  val M = reader.M
+  var N = 0
+  var root: BTNode = BTNode(0)
+  var height = 0
 
-  def insert(node: KVPair[K, V]): Unit = {
+
+  def put(key: String, value: Int): Unit = {
+    val u = insert(root, key, value, height)
+    N += 1
+
+    u match {
+      case None => ()
+      case Some(up) =>
+        val t = BTNode(2)
+        t.children(0) = BTEntry(root.children(0).key, -1, Some(root), reader)
+        t.children(1) = BTEntry(up.children(0).key, -1, Some(up), reader)
+        root = t
+        height += 1
+    }
 
   }
 
-  def tryInsert(entry: BTEntry, addNode: BTNode): Option[(BTEntry, BTNode, BTEntry)] = {
-    entry.isFull match {
-      case true => Some(entry.doSplit(addNode))
-      case false =>
-        entry addNode addNode.posit
-        None
+  private def insert(h: BTNode, key: String, value: Int, height: Int): Option[BTNode] = {
+    var j: Int = 0
+
+    val t = BTEntry(key, value, None, reader)
+
+    val atExternal = height == 0
+
+    j = atExternal match {
+      case true => {
+        (0 until h.childCount).find { (ind) =>
+          val currKey = h.children(ind).key
+          key < currKey
+        }.getOrElse(0)
+      }
+      case false => {
+        val r = (0 until h.childCount).find { (ind) =>
+          val currKey = h.children(ind + 1).key
+          ind + 1 == h.childCount || key < currKey
+        }.getOrElse(0) + 1
+        r
+      }
+    }
+
+    val throwUp = {
+      val dropNode = h.children(j)
+      val u: Option[BTNode] = if(dropNode.next.isDefined) insert(dropNode.next.get, key, value, height - 1) else None
+      u match {
+        case None => None
+        case Some(upSent) => {
+          val smallEntry = upSent.children(0)
+          t.key = smallEntry.key
+
+          t.next = Some(upSent)
+          t.next
+        }
+      }
+    }
+
+
+    throwUp match {
+      case None => None
+      case Some(_) => {
+        for (i <- h.childCount until 0 by -1; if i > j)
+          h.children(i) = h.children(i - 1)
+
+        h.children(j) = t
+        h.childCount += 1
+        if (h.childCount < M) None else Some(h.split)
+      }
+
     }
   }
 
@@ -23,9 +84,8 @@ class BTree[K, V](reader: BTReader, SIZE: Int)(var root: BTEntry) {
 object BTree {
   val ROOT_POSIT = 0
 
-  def apply[K, V](reader: BTReader, entrySize: Int): BTree[K, V] = {
-    val root = reader.extractEntry(ROOT_POSIT)
-    new BTree[K, V](reader, entrySize)(root)
+  def apply(reader: BTReader): BTree = {
+    new BTree(reader)
   }
 
 }

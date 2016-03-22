@@ -1,3 +1,4 @@
+import rcollection.btree.BTree
 import readers.BTReader
 
 /**
@@ -25,23 +26,10 @@ object Run extends App {
     println(middle)
   }
 
-  def testReader(): Unit ={
-    val reader = BTReader("test.txt", 5)
-    val entryPosit = reader.insertEmptyEntry
-    val entry = reader.extractEntry(entryPosit)
-
-    val nodePosits = for(i <- List(2,3,5,7)) yield reader.newNode(i.toString)
-
-    nodePosits.map(reader.extractNode).foreach(println)
-    val flowNode = reader.newNode("6")
-
-    entry addNodes nodePosits
-    println(entry.toStringR)
-    val splitResult = entry.doSplit(reader.extractNode(flowNode))
-
-    println(s"The left entry is ${splitResult._1.toStringR}")
-    println(s"The middle node is ${splitResult._2}")
-    println(s"The right entry is ${splitResult._3.toStringR}")
+  def testReader(): Unit = {
+    val reader = BTReader("test.txt", 4)
+    val btree = BTree(reader)
+    btree.put("Hello", 22)
 
   }
 }

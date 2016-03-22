@@ -1,10 +1,10 @@
 /**
- * BTree from the algorithms book.
+ * ZTree from the algorithms book.
  *
  * @param <Key>
  * @param <Value>
  */
-public class BTree<Key extends Comparable<Key>, Value> {
+public class ZTree<Key extends Comparable<Key>, Value> {
     // max children per B-tree node = M-1
     // (must be even and greater than 2)
     private static final int M = 4;
@@ -31,7 +31,7 @@ public class BTree<Key extends Comparable<Key>, Value> {
         private Object val;
         private Node next;     // helper field to iterate over array entries
 
-        public Entry(Comparable key, Object val, Node next) {
+        Entry(Comparable key, Object val, Node next) {
             this.key = key;
             this.val = val;
             this.next = next;
@@ -41,7 +41,7 @@ public class BTree<Key extends Comparable<Key>, Value> {
     /**
      * Initializes an empty B-tree.
      */
-    public BTree() {
+    public ZTree() {
         root = new Node(0);
     }
 
@@ -86,13 +86,26 @@ public class BTree<Key extends Comparable<Key>, Value> {
         return search(root, key, height);
     }
 
+
+    /**
+     * Searches for a key starting at a give node and height recursively.
+     *
+     * @param x   The node to start searching at.
+     * @param key The key being searched for.
+     * @param ht  The current height level of the recursive search.
+     * @return The value associated with the given key if any.
+     */
     private Value search(Node x, Key key, int ht) {
         Entry[] children = x.children;
-
+        System.out.println(ht);
         // external node
+        
         if (ht == 0) {
             for (int j = 0; j < x.childCount; j++) {
-                if (eq(key, children[j].key)) return (Value) children[j].val;
+                if (eq(key, children[j].key)) {
+                    System.out.println("Hit at height " + ht);
+                    return (Value) children[j].val;
+                }
             }
         }
 
@@ -137,43 +150,60 @@ public class BTree<Key extends Comparable<Key>, Value> {
      * @param key The key being inserted.
      * @param val The value being inserted.
      * @param ht  The current number of steps until a leaf is reached. if > 0, not leaf, else leaf. ht != -1.
-     * @return
-     *      Returns null if a split is not necessary. Else the center node is returned.
+     * @return Returns null if a split is not necessary. Else returns the right node (contains the larger RIGHT half of values).
      */
     private Node insert(Node h, Key key, Value val, int ht) {
         int j; // The child array index to place the new entry into.
         Entry t = new Entry(key, val, null); // Create an entry with key value pairs and no next value.
 
-        // If the height has been exhausted then we are at a leaf. Start traversing the array of children
-        // to find the position in the node place the new entry at.
+        /* If the height has been exhausted then we are at a leaf. Start traversing the array of children
+         * to find the position in the node to place the new entry at.
+         */
         if (ht == 0) {
             for (j = 0; j < h.childCount; j++) {
                 if (less(key, h.children[j].key)) break;
             }
         }
 
-        // If the height has not been exhausted then continue traversing through the tree.
+        /* If the height has not been exhausted then continue traversing through the tree.
+         *
+         * Traversal :
+         *
+         * NOTE : internal nodes: only use key and next
+         *        external nodes: only use key and value
+         */
         else {
+            //For loop locates the correct child node to drop into to continue traversal.
             for (j = 0; j < h.childCount; j++) {
-                if ((j + 1 == h.childCount) || less(key, h.children[j + 1].key)) { //
-                    Node u = insert(h.children[j++].next, key, val, ht - 1);
-                    if (u == null) return null;
-                    t.key = u.children[0].key;
-                    t.next = u;
+                if ((j + 1 == h.childCount) || less(key, h.children[j + 1].key)) { //True if loop is at last child's index (j), or the key for the current entry fits into the current slot (j).
+                    Node u = insert(h.children[j++].next, key, val, ht - 1); // Recursively call insert with the h(drop into node) being an intermediate key'd valued child or the last child if key is larger than all.
+                    if (u == null) return null; // If the insertion does not result in a split then return null
+                    t.key = u.children[0].key; // If the node is split set the T node's key to the key of the new RIGHT NODE.
+                    System.out.println("Key is " + t.key);
+                    System.out.println("Value is " + t.val);
+                    t.next = u; //The next value of T is set as the new RIGHT NODE
                     break;
                 }
             }
         }
 
+        /*
+         * Start iterating at the number of children the current node has.
+         * Stop once i is less than the position the new entry is being placed into.
+         *
+         * Element in t's place in h and elements where [i] > t's [i] are all moved to the right.
+         *
+         */
         for (int i = h.childCount; i > j; i--)
             h.children[i] = h.children[i - 1];
+
+        //Drop new entry node into it's target location.
         h.children[j] = t;
         h.childCount++;
-        if (h.childCount < M) return null;
-        else return split(h);
+        return (h.childCount < M) ? null : split(h); // Return null if the number of children is not at the degree count.
     }
 
-    // split node in half
+    // split node in half then return node RIGHT (contains the largest valued half of the nodes).
     private Node split(Node h) {
         Node t = new Node(M / 2);
         h.childCount = M / 2;
@@ -210,12 +240,10 @@ public class BTree<Key extends Comparable<Key>, Value> {
 
     /**
      * Determines whether k1 is smaller than k2.
-     * @param k1
-     *          The first key.
-     * @param k2
-     *          The second key.
-     * @return
-     *         True if k1 is smaller than k2.
+     *
+     * @param k1 The first key.
+     * @param k2 The second key.
+     * @return True if k1 is smaller than k2.
      */
     private boolean less(Comparable k1, Comparable k2) {
         return k1.compareTo(k2) < 0;
@@ -223,15 +251,52 @@ public class BTree<Key extends Comparable<Key>, Value> {
 
     /**
      * Determines whether k1 is equal to k2.
-     * @param k1
-     *          The first key.
-     * @param k2
-     *          The second key.
-     * @return
-     *         True if k1 is equal to k2.
+     *
+     * @param k1 The first key.
+     * @param k2 The second key.
+     * @return True if k1 is equal to k2.
      */
     private boolean eq(Comparable k1, Comparable k2) {
         return k1.compareTo(k2) == 0;
+    }
+
+    /**
+     * Unit tests the <tt>ZTree</tt> data type.
+     */
+    public static void main(String[] args) {
+        ZTree<String, String> st = new ZTree<>();
+
+        st.put("www.cs.princeton.edu", "128.112.136.12");
+        st.put("www.cs.princeton.edu", "128.112.136.11");
+        st.put("www.princeton.edu", "128.112.128.15");
+        st.put("www.yale.edu", "130.132.143.21");
+        st.put("www.simpsons.com", "209.052.165.60");
+        st.put("www.apple.com", "17.112.152.32");
+        st.put("www.amazon.com", "207.171.182.16");
+        st.put("www.ebay.com", "66.135.192.87");
+        st.put("www.cnn.com", "64.236.16.20");
+        st.put("www.google.com", "216.239.41.99");
+        st.put("www.nytimes.com", "199.239.136.200");
+        st.put("www.microsoft.com", "207.126.99.140");
+        st.put("www.dell.com", "143.166.224.230");
+        st.put("www.slashdot.org", "66.35.250.151");
+        st.put("www.espn.com", "199.181.135.201");
+        st.put("www.weather.com", "63.111.66.11");
+        st.put("www.yahoo.com", "216.109.118.65");
+
+
+        System.out.println("cs.princeton.edu:  " + st.get("www.cs.princeton.edu"));
+        System.out.println("hardvardsucks.com: " + st.get("www.harvardsucks.com"));
+        System.out.println("simpsons.com:      " + st.get("www.simpsons.com"));
+        System.out.println("apple.com:         " + st.get("www.apple.com"));
+        System.out.println("ebay.com:          " + st.get("www.ebay.com"));
+        System.out.println("dell.com:          " + st.get("www.dell.com"));
+        System.out.println("yahoo.com          " + st.get("www.yahoo.com"));
+
+        System.out.println("size:    " + st.size());
+        System.out.println("height:  " + st.height());
+//        System.out.println(st);
+        System.out.println();
     }
 
 
