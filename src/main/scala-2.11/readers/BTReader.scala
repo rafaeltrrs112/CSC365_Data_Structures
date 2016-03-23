@@ -45,7 +45,7 @@ case class BTReader(filePath: String, M: Int) {
     at
   }
 
-  def writeNodeAt(at: Long, childCount: Int, children: Array[Long])(implicit file: RandomAccessFile = raf): Long = {
+  def writeNode(at: Long, childCount: Int, children: Array[Long])(implicit file: RandomAccessFile = raf): Long = {
     val posit = file.getFilePointer
     file.seek(at)
 
@@ -58,7 +58,6 @@ case class BTReader(filePath: String, M: Int) {
     file.seek(posit)
     at
   }
-
 
   def toNode(at : Long) : BTNode = ???
 
@@ -156,6 +155,12 @@ case class BTReader(filePath: String, M: Int) {
 //    val born = children.filterNot(_ == -1)
 //    val e = BTNode(at, existing.to[ListBuffer], this, born.to[ListBuffer])
 //    e
+//  }
+
+//  case class NodeWriter(reader: BTReader){
+//    def ~> (node: BTNode): Unit = {
+//      reader.toN
+//    }
 //  }
 
 }

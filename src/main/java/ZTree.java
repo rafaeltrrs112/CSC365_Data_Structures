@@ -97,9 +97,8 @@ public class ZTree<Key extends Comparable<Key>, Value> {
      */
     private Value search(Node x, Key key, int ht) {
         Entry[] children = x.children;
-        System.out.println(ht);
+
         // external node
-        
         if (ht == 0) {
             for (int j = 0; j < x.childCount; j++) {
                 if (eq(key, children[j].key)) {
@@ -161,7 +160,9 @@ public class ZTree<Key extends Comparable<Key>, Value> {
          */
         if (ht == 0) {
             for (j = 0; j < h.childCount; j++) {
-                if (less(key, h.children[j].key)) break;
+                if (less(key, h.children[j].key)) {
+                    break;
+                }
             }
         }
 
@@ -176,16 +177,21 @@ public class ZTree<Key extends Comparable<Key>, Value> {
             //For loop locates the correct child node to drop into to continue traversal.
             for (j = 0; j < h.childCount; j++) {
                 if ((j + 1 == h.childCount) || less(key, h.children[j + 1].key)) { //True if loop is at last child's index (j), or the key for the current entry fits into the current slot (j).
+//                    System.out.println(h.children[j++].next);
                     Node u = insert(h.children[j++].next, key, val, ht - 1); // Recursively call insert with the h(drop into node) being an intermediate key'd valued child or the last child if key is larger than all.
+                                                //J is incremented here because the if statement is hit if the key is larger than all child links or a link larger than the key is found. If a node is promoted it
+                                                //may be greater than or equal to the node that was slotted into here but not greater than node J + 1. So node j + 1 will be replaced with the promoted node and it will
+                                                //be shifted to the right because it is guaranteed to be greater than the promoted node.
                     if (u == null) return null; // If the insertion does not result in a split then return null
                     t.key = u.children[0].key; // If the node is split set the T node's key to the key of the new RIGHT NODE.
-                    System.out.println("Key is " + t.key);
-                    System.out.println("Value is " + t.val);
+                                                                //This updates the key copy links in this node for the future.
                     t.next = u; //The next value of T is set as the new RIGHT NODE
                     break;
                 }
             }
         }
+
+        System.out.println(j);
 
         /*
          * Start iterating at the number of children the current node has.
@@ -227,7 +233,7 @@ public class ZTree<Key extends Comparable<Key>, Value> {
 
         if (ht == 0) {
             for (int j = 0; j < h.childCount; j++) {
-                s.append(indent + children[j].key + " " + children[j].val + "\n");
+                s.append(indent + children[j].key + " " + children[j].val + ", at height " + ht + "\n");
             }
         } else {
             for (int j = 0; j < h.childCount; j++) {
@@ -284,7 +290,7 @@ public class ZTree<Key extends Comparable<Key>, Value> {
         st.put("www.weather.com", "63.111.66.11");
         st.put("www.yahoo.com", "216.109.118.65");
 
-
+//
         System.out.println("cs.princeton.edu:  " + st.get("www.cs.princeton.edu"));
         System.out.println("hardvardsucks.com: " + st.get("www.harvardsucks.com"));
         System.out.println("simpsons.com:      " + st.get("www.simpsons.com"));
@@ -292,11 +298,11 @@ public class ZTree<Key extends Comparable<Key>, Value> {
         System.out.println("ebay.com:          " + st.get("www.ebay.com"));
         System.out.println("dell.com:          " + st.get("www.dell.com"));
         System.out.println("yahoo.com          " + st.get("www.yahoo.com"));
-
-        System.out.println("size:    " + st.size());
-        System.out.println("height:  " + st.height());
+//
+//        System.out.println("size:    " + st.size());
+//        System.out.println("height:  " + st.height());
 //        System.out.println(st);
-        System.out.println();
+//        System.out.println();
     }
 
 
