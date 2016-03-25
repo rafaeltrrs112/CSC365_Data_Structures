@@ -9,6 +9,8 @@ class BTree(reader: BTReader) extends Iterable[(String, Int)] {
   var root: BTNode = BTNode(0)
   var height = 0
 
+  root.update()
+  reader.root = root.at
 
   def put(key: String, value: Int): Unit = {
     val u = insert(root, key, value, height)
@@ -17,11 +19,20 @@ class BTree(reader: BTReader) extends Iterable[(String, Int)] {
     u match {
       case None => ()
       case Some(up) =>
-        val t = BTNode(2)
+        val t = BTNode(0)
+
         t.children(0) = BTEntry(root.children(0).key, -1, Some(root), reader)
         t.children(1) = BTEntry(up.children(0).key, -1, Some(up), reader)
+        t.childCount = 2
+        t.update()
+        root.update()
+        t.update()
         root = t
+
         height += 1
+        t.update()
+
+        reader.root = root.at
     }
 
   }
@@ -36,9 +47,7 @@ class BTree(reader: BTReader) extends Iterable[(String, Int)] {
     val j = if (atExternal) wedgePosit(h, key) else dropPosition(h, key)
 
     atExternal match {
-      case true => {
-        shiftInsert(h, t, j)
-      }
+      case true => shiftInsert(h, t, j)
       case false =>
         val dropPosit = j + 1
         val drop = continueTraverse(h, t, j, key, value, height - 1)
@@ -47,6 +56,7 @@ class BTree(reader: BTReader) extends Iterable[(String, Int)] {
           case Some(upSent) =>
             t.key = upSent.children(0).key
             t.next = Some(upSent)
+            t.update()
             shiftInsert(h, t, dropPosit)
         }
     }
@@ -77,6 +87,7 @@ class BTree(reader: BTReader) extends Iterable[(String, Int)] {
 
     h.children(j) = t
     h.childCount += 1
+    h.update()
     if (h.childCount < M) None else Some(h.split)
   }
 
@@ -115,7 +126,6 @@ class BTree(reader: BTReader) extends Iterable[(String, Int)] {
     }
   }
 
-
   override def toString: String = {
     toString(root, height, "") + "\n"
   }
@@ -140,6 +150,8 @@ class BTree(reader: BTReader) extends Iterable[(String, Int)] {
 
   override def toSeq: Seq[(String, Int)] = toSeq(root, height)
 
+  def entryPointers: Seq[Long] = entryPointers(root, height)
+
   private def toSeq(h: BTNode, ht: Int): Seq[(String, Int)] = {
     val children: Array[BTEntry] = h.children
     if (ht == 0) {
@@ -154,14 +166,27 @@ class BTree(reader: BTReader) extends Iterable[(String, Int)] {
     }
   }
 
-  private def iterFind(x: BTNode, key: String): Option[Int] = (0 until x.childCount).find(key == x.children(_).key)
+  private def childRange(childCount: Int): Range = 0 until childCount
+
+  private def entryPointers(h: BTNode, ht: Int): Seq[Long] = {
+    val children: Array[BTEntry] = h.children
+    if (ht == 0) {
+      (0 until h.childCount).map { (ind) =>
+        children(ind).at
+      }
+    }
+    else {
+      (0 until h.childCount).flatMap { (ind) =>
+        entryPointers(children(ind).next.get, ht - 1)
+      }
+    }
+  }
+
 
 }
 
 
 object BTree {
-  def apply(reader: BTReader): BTree = {
-    new BTree(reader)
-  }
+  def apply(reader: BTReader): BTree = new BTree(reader)
 
 }

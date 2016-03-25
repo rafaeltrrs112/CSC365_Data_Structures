@@ -233,11 +233,11 @@ public class ZTree<Key extends Comparable<Key>, Value> {
 
         if (ht == 0) {
             for (int j = 0; j < h.childCount; j++) {
-                s.append(indent + children[j].key + " " + children[j].val + ", at height " + ht + "\n");
+                s.append(indent).append(children[j].key).append(" ").append(children[j].val).append(", at height ").append(ht).append("\n");
             }
         } else {
             for (int j = 0; j < h.childCount; j++) {
-                if (j > 0) s.append(indent + "(" + children[j].key + ")\n");
+                if (j > 0) s.append(indent).append("(").append(children[j].key).append(")\n");
                 s.append(toString(children[j].next, ht - 1, indent + "     "));
             }
         }
@@ -277,8 +277,8 @@ public class ZTree<Key extends Comparable<Key>, Value> {
         st.put("www.princeton.edu", "128.112.128.15");
         st.put("www.yale.edu", "130.132.143.21");
         st.put("www.simpsons.com", "209.052.165.60");
-        st.put("www.apple.com", "17.112.152.32");
-        st.put("www.amazon.com", "207.171.182.16");
+        st.put("www.epple.com", "17.112.152.32");
+        st.put("www.emazon.com", "207.171.182.16");
         st.put("www.ebay.com", "66.135.192.87");
         st.put("www.cnn.com", "64.236.16.20");
         st.put("www.google.com", "216.239.41.99");
@@ -294,13 +294,13 @@ public class ZTree<Key extends Comparable<Key>, Value> {
         System.out.println("cs.princeton.edu:  " + st.get("www.cs.princeton.edu"));
         System.out.println("hardvardsucks.com: " + st.get("www.harvardsucks.com"));
         System.out.println("simpsons.com:      " + st.get("www.simpsons.com"));
-        System.out.println("apple.com:         " + st.get("www.apple.com"));
+        System.out.println("epple.com:         " + st.get("www.apple.com"));
         System.out.println("ebay.com:          " + st.get("www.ebay.com"));
         System.out.println("dell.com:          " + st.get("www.dell.com"));
         System.out.println("yahoo.com          " + st.get("www.yahoo.com"));
 //
 //        System.out.println("size:    " + st.size());
-//        System.out.println("height:  " + st.height());
+        System.out.println("height:  " + st.height());
 //        System.out.println(st);
 //        System.out.println();
     }
